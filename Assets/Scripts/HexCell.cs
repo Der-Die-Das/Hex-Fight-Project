@@ -4,5 +4,7 @@ public class HexCell : MonoBehaviour {
 
 	public HexCoordinates coordinates;
 
-	public Color color;
+    public GameObject placedObject { get; set; }
+
+	//public Color color;
 }
