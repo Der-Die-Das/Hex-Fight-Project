@@ -15,14 +15,13 @@ public class GameManager : MonoBehaviour {
 
     void Awake()
     {
-        instance = new GameManager();
-        DontDestroyOnLoad(instance);
+        
     }
 
 
 	// Use this for initialization
 	void Start () {
-	
+        DontDestroyOnLoad(instance);
 	}
 	
 	// Update is called once per frame
