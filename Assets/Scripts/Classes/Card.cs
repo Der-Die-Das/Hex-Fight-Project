@@ -14,7 +14,7 @@ namespace HexFight
         private int minAttackRange;
         private int maxAttackRange;
         private Type type;
-        //Hex-Coordinates
+        HexCoordinates position;
         public enum Partition { Offense,Defense};
         private Partition partition;
         
