@@ -28,4 +28,18 @@ public class GameManager : MonoBehaviour {
 	void Update () {
 	
 	}
+
+    public static GameManager GetInstance() {
+        return instance;
+    }
+
+    public void LoadLevelSelection() {
+        //Load LevelSelection
+        //Application.LoadLevel();
+    }
+
+    public void LoadDeckManager() {
+        //Load DeckManager
+        //Application.LoadLevel();
+    }
 }
