@@ -1,46 +1,67 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
+using System.Collections.Generic;
 
 namespace HexFight
 {
+    [Serializable]
     public class Card : MonoBehaviour
     {
         // Member-Attributes
-        private string name;
-        private int hp;
+        //maybe add custom editor to handle properties
+        public string cardName;
+        public int hp;
         private int level;
-        private int damage;
-        private int moveRange;
-        private int minAttackRange;
-        private int maxAttackRange;
-        private Type type;
-        HexCoordinates position;
-        public enum Partition { Offense,Defense};
-        private Partition partition;
-        
+        public int damage;
+        public int moveRange;
+        public int minAttackRange;
+        public int maxAttackRange;
+        public Type type;
+        private HexCoordinates position;        
 
+        [Serializable]
         public struct Type
         {
-            private string name;
-            private Type[] strongAgainst;
-            private Type[] weakAgainst;
+            public static List<Type> allTypes = new List<Type>();
+            public string name;
+            public List<string> strongAgainst; //string because of upcoming intialization issues
+            public List<string> weakAgainst;
 
+            public Type(string pName)
+            {
+                name = pName;
+                strongAgainst = new List<string>();
+                weakAgainst = new List<string>();
+            }
         }
-
-        // Konstruktoren
-        public Card(string pname, int php, int plevel, int pdamage, int pmoveRange, int pminAttackRange, int pmaxAttackRange, Type ptype)
+        void Awake()
         {
-            name = pname;
-            hp = php;
-            level = plevel;
-            damage = pdamage;
-            moveRange = pmoveRange;
-            minAttackRange = pminAttackRange;
-            maxAttackRange = pmaxAttackRange;
-            type = ptype;
+            if (cardName == "" || hp == 0|| damage == 0 || moveRange == 0 || minAttackRange == 0 || maxAttackRange == 0 || type.name == "")
+            {
+                throw new Exception("Not all Parameters of this Card are set.");
+            }
         }
 
+        public bool MoveInDirection(int direction){
+            return false;
+        }
+        public bool Attack(HexCoordinates position)
+        {
+            return false;
+        }
+        public void Die()
+        {
 
-        // Member-Methoden
+        }
+        private bool EnterTransportCard(Transportcard card)
+        {
+            return false;
+        }
+        private bool LeaveTransportCard(Transportcard card)
+        {
+            return false;
+        }
+
     }
 }

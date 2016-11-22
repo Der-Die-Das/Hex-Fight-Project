@@ -1,16 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 namespace HexFight
 {
-    [SelectionBase]
+    [SelectionBase, Serializable, ExecuteInEditMode]
     public class HexCell : MonoBehaviour
     {
         public HexCoordinates position;
         public GameObject placedObjectPrefab;
         private GameObject placedObject;
-
 
         public HexCell(HexCoordinates pos)
         {
@@ -21,9 +21,13 @@ namespace HexFight
         {
             if (placedObjectPrefab != null)
             {
-                placedObject = (GameObject)Instantiate(placedObjectPrefab, gameObject.transform.position, Quaternion.identity);
-                placedObject.transform.parent = gameObject.transform;
-                placedObject.name = placedObjectPrefab.name;
+                if (placedObject == null)
+                {
+                    placedObject = (GameObject)Instantiate(placedObjectPrefab, gameObject.transform.position, placedObjectPrefab.transform.rotation);
+                    placedObject.transform.position += new Vector3(0,placedObject.transform.lossyScale.y/2);
+                    placedObject.transform.parent = gameObject.transform;
+                    placedObject.name = placedObjectPrefab.name;
+                }
             }
         }
         public void DestroyObject()
@@ -33,6 +37,7 @@ namespace HexFight
                 DestroyImmediate(placedObject);
             }
         }
+
 
         public HexCell[] GetNeighbours()
         {
@@ -44,20 +49,20 @@ namespace HexFight
             new HexCoordinates(1,0),
             null,null,null,null
             };
-                if (position.y % 2 == 0)
-                {
-                    offsets[2] = new HexCoordinates(0, 1);
-                    offsets[3] = new HexCoordinates(-1, 1);
-                    offsets[4] = new HexCoordinates(-1, -1);
-                    offsets[5] = new HexCoordinates(0, -1);
-                }
-                else
-                {
-                    offsets[2] = new HexCoordinates(1, 1);
-                    offsets[3] = new HexCoordinates(0, 1);
-                    offsets[4] = new HexCoordinates(1, -1);
-                    offsets[5] = new HexCoordinates(0, -1);
-                }
+            if (position.y % 2 == 0)
+            {
+                offsets[2] = new HexCoordinates(0, 1);
+                offsets[3] = new HexCoordinates(-1, 1);
+                offsets[4] = new HexCoordinates(-1, -1);
+                offsets[5] = new HexCoordinates(0, -1);
+            }
+            else
+            {
+                offsets[2] = new HexCoordinates(1, 1);
+                offsets[3] = new HexCoordinates(0, 1);
+                offsets[4] = new HexCoordinates(0, -1);
+                offsets[5] = new HexCoordinates(1, -1);
+            }
             for (int i = 0; i < offsets.Length; i++)
             {
 
