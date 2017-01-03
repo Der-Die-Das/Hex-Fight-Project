@@ -51,6 +51,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e34f74c6489584843b0b465cba73f7d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ConnectionPrefab: {fileID: 1000010462685094, guid: e3a35b12a753e9f43a07618576089f6b,
+    type: 2}
   height: 10
   width: 10
   hexPrefab: {fileID: 1000010452999116, guid: 13f49a5044e3136459c2e7c0d62f1e9c, type: 2}
+  cells: []
+  footman: {fileID: 1000011832293102, guid: 5193005dd65d7c54ba01502f4fe30af3, type: 2}

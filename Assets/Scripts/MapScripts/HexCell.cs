@@ -24,7 +24,6 @@ namespace HexFight
                 if (placedObject == null)
                 {
                     placedObject = (GameObject)Instantiate(placedObjectPrefab, gameObject.transform.position, placedObjectPrefab.transform.rotation);
-                    placedObject.transform.position += new Vector3(0,placedObject.transform.lossyScale.y/2);
                     placedObject.transform.parent = gameObject.transform;
                     placedObject.name = placedObjectPrefab.name;
                 }
