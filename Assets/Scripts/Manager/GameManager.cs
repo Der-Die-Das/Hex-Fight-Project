@@ -1,45 +1,70 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
-public class GameManager : MonoBehaviour {
+namespace HexFight {
+    public class GameManager : MonoBehaviour {
 
-    private static GameManager instance;
+        public static GameManager instance { get; private set; }
+        public Player player { get; private set; }
 
-    private GameManager()
-    {
-        if(instance == null)
+        public GameManager()
         {
-            instance = this;
+            if (instance == null)
+            {
+                instance = this;
+            }
         }
-    }
 
-    void Awake()
-    {
-        
-    }
+        void Awake()
+        {
+            DontDestroyOnLoad(instance);
+            LoadPlayer();
+        }
 
 
-	// Use this for initialization
-	void Start () {
-        DontDestroyOnLoad(instance);
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+        // Use this for initialization
+        void Start() {
+            
+        }
 
-    public static GameManager GetInstance() {
-        return instance;
-    }
+        // Update is called once per frame
+        void Update() {
 
-    public void LoadLevelSelection() {
-        //Load LevelSelection
-        //Application.LoadLevel();
-    }
+        }
 
-    public void LoadDeckManager() {
-        //Load DeckManager
-        //Application.LoadLevel();
+        public void LoadLevelSelection() {
+            //Load LevelSelection
+            //Application.LoadLevel();
+        }
+
+        public void LoadDeckManager() {
+            //Load DeckManager
+            //Application.LoadLevel();
+        }
+
+        private void LoadPlayer() 
+        {
+            //Search for existing Player, if there is none, create a new Player
+            string source = @"Assets\player.bin";
+            if (!File.Exists(source))
+            {
+                using (FileStream fs = new FileStream(source, FileMode.Create, FileAccess.Write))
+                {
+                    player = new Player("Name");
+                    BinaryFormatter bf = new BinaryFormatter();
+                    bf.Serialize(fs, player);
+                }
+            }
+            else 
+            {
+                using(FileStream fs = new FileStream(source, FileMode.Open, FileAccess.Read)) 
+                {
+                    BinaryFormatter bf = new BinaryFormatter();
+                    player = (Player)bf.Deserialize(fs);
+                }
+            }
+        }
     }
 }
