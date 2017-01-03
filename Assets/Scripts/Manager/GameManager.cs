@@ -23,7 +23,6 @@ namespace HexFight {
             LoadPlayer();
         }
 
-
         // Use this for initialization
         void Start() {
             
@@ -65,6 +64,7 @@ namespace HexFight {
                     player = (Player)bf.Deserialize(fs);
                 }
             }
+
         }
     }
 }

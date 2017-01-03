@@ -341,6 +341,7 @@ namespace HexFight {
         }
         public void BackToDeckManagerFromDeck() {
             state = State.DeckToDeckMngr;
+
         }
     }
 }
