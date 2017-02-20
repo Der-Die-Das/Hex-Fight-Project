@@ -22,15 +22,26 @@ namespace HexFight
         /// </summary>
         /// <param name="card">The Card you want to add.</param>
         /// <returns>Returns if the Card got added.</returns>
-        public bool addCard(Card card)
+        public bool addCard(Tuple<string, int> card)
         {
             for (int i = 0; i < cards.Length; i++)
             {
-                if(cards[i] == null) 
+                
+                if (cards[i] != null)
                 {
-                    //cards[i] = new Tuple<string, int>(card.name, card.level);
-                    return true;
+                    if (cards[i].first == card.first)
+                    {
+                        return false;
+                    }
                 }
+            }
+            for (int i = 0; i < cards.Length; i++)
+            {
+                    if (cards[i] == null)
+                    {
+                        cards[i] = card;
+                        return true;
+                    }
             }
             return false;
             
@@ -38,16 +49,19 @@ namespace HexFight
         /// <summary>
         /// Removes a card from the Deck.
         /// </summary>
-        /// <param name="card">Thge Card you want to remove.</param>
+        /// <param name="card">The Card you want to remove.</param>
         /// <returns>Returns if the Card got removed.</returns>
         public bool removeCard(Tuple<string, int> card)
         {
             for (int i = 0; i < cards.Length; i++)
             {
-                if(cards[i] == card) 
+                if (cards[i] != null)
                 {
-                    cards[i] = null;
-                    return true;
+                    if (cards[i].first == card.first)
+                    {
+                        cards[i] = null;
+                        return true;
+                    }
                 }
             }
             return false;

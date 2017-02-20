@@ -3,345 +3,299 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
-namespace HexFight {
+namespace HexFight
+{
     public class UIManager : MonoBehaviour
     {
+        public Animator OptionBarAnimator;
+        public Canvas MainMenu;
+        public Canvas DeckSelection;
+        public Canvas DeckManager;
+        public Canvas CardShowcase;
+        public Button[] DeckSelections;
+        public GameObject CardHolder;
+        public GameObject DeckHolder;
+        public GameObject CardPrefab;
+        public EventSystem eventSystem;
+        public InputField DeckName;
 
-        public List<GameObject> OptionBar;
-        public GameObject[] canvas;
-        public GameObject[] DeckManagerButtons;
-        public GameObject DeckManagerCanvasGroup;
-        public GameObject NameEditorCanvasGroup;
-        public GameObject DeckEditor_Deck;
-        private bool OptionBarExpanded = false;
-        private List<Animator> animator = new List<Animator>();
+        private bool movedFinger;
         private Deck selectedDeck;
-        private GameObject selectedCardinDeck;
-        public GameObject[] cardsDeckEditor;
-
-        private enum CardState { ZoomedIn, ZommedOut};
-        private CardState cardstate;
-        private enum State { MainToLevel, MainToDeckMngr, DeckMngrToMain, LevelToMain, DeckMngrToDeck, DeckToDeckMngr }
-        private State state;
-
-
-        void Awake() {
-            
+        private Card cardInShowCase;
+        private void Awake()
+        {
+            DeckSelection.enabled = false;
+            DeckManager.enabled = false;
+            CardShowcase.enabled = false;
         }
 
-        // Use this for initialization
-        void Start()
+        private void Update()
         {
-            //subscribe to inputfield onEndEdit-Event
-            NameEditorCanvasGroup.GetComponentInChildren<InputField>().onEndEdit.AddListener(ChangeDeckName);
-
-            //add all optionbaranimators to a list
-            foreach (GameObject item in OptionBar)
+            if (DeckManager.enabled && !CardShowcase.enabled)
             {
-                animator.Add(item.GetComponent<Animator>());
-            }
-
-
-            for (int i = 0; i < canvas.Length; i++)
-            {
-                canvas[i].GetComponent<RectTransform>().sizeDelta = new Vector2(Screen.width, Screen.height);
-                if (i >= 1)
+                if (Input.touchCount == 1)
                 {
-                    canvas[i].GetComponent<RectTransform>().position = new Vector2(canvas[i - 1].GetComponent<RectTransform>().position.x + Screen.width, 0);
+                    switch (Input.GetTouch(0).phase)
+                    {
+                        case TouchPhase.Began:
+                            movedFinger = false;
+                            break;
+                        case TouchPhase.Moved:
+                            movedFinger = true;
+                            break;
+                        case TouchPhase.Ended:
+                            if (movedFinger == false)
+                            {
+                                if (eventSystem.currentSelectedGameObject != null)
+                                {
+                                    Card selectedCard = eventSystem.currentSelectedGameObject.GetComponent<Card>();
+                                    if (selectedCard != null)
+                                    {
+                                        if (selectedCard.transform.parent.name == "Card Content")
+                                        {
+                                            bool hasCard = false;
+
+                                            if (selectedDeck.cards.Length > 0)
+                                            {
+                                                foreach (var item in selectedDeck.cards)
+                                                {
+                                                    if (item != null)
+                                                    {
+                                                        if (item.first == selectedCard.template.cardName)
+                                                        {
+                                                            hasCard = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            CardShowcase.transform.FindChild("ToDeck").gameObject.SetActive(!hasCard);
+
+                                            CardShowcase.transform.FindChild("RemoveFromDeck").gameObject.SetActive(hasCard);
+                                        }
+                                        else if (selectedCard.transform.parent.name == "Deck Content")
+                                        {
+                                            CardShowcase.transform.FindChild("ToDeck").gameObject.SetActive(false);
+                                            CardShowcase.transform.FindChild("RemoveFromDeck").gameObject.SetActive(true);
+                                        }
+                                        else
+                                        {
+                                            Debug.Log("oh oh ... fail!");
+                                        }
+
+                                        CardShowcase.transform.FindChild("Move Range").GetChild(0).GetComponent<Text>().text = selectedCard.template.moveRange.ToString();
+                                        CardShowcase.transform.FindChild("Type").GetChild(0).GetComponent<Text>().text = selectedCard.template.typeName;
+                                        CardShowcase.transform.FindChild("Damage").GetChild(0).GetComponent<Text>().text = selectedCard.template.damage.ToString();
+                                        CardShowcase.transform.FindChild("Name").GetChild(0).GetComponent<Text>().text = selectedCard.template.cardName;
+                                        CardShowcase.transform.FindChild("Attack Range").GetChild(0).GetComponent<Text>().text = selectedCard.template.minAttackRange + " - " + selectedCard.template.maxAttackRange;
+                                        CardShowcase.transform.FindChild("HP").GetChild(0).GetComponent<Text>().text = selectedCard.template.hp.ToString();
+                                        CardShowcase.transform.FindChild("Level").GetChild(0).GetComponent<Text>().text = selectedCard.template.level.ToString();
+
+                                        cardInShowCase = selectedCard;
+
+                                        CardShowcase.enabled = true;
+
+                                    }
+                                    else
+                                    {
+                                        Debug.Log(eventSystem.currentSelectedGameObject.name);
+                                        if (eventSystem.currentSelectedGameObject.name == "DeckName")
+                                        {
+                                            TouchScreenKeyboard.Open(selectedDeck.name, TouchScreenKeyboardType.NamePhonePad);
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                    }
                 }
             }
-
-            LoadDeckNames();
-
         }
 
-        private void LoadDeckNames() {
-            //Set ButtonTexts in DeckManager the value of the decknames
+
+        public void ChangeStateOfOptionBar()
+        {
+            OptionBarAnimator.SetTrigger("Change");
+        }
+
+        #region MainMenuFunctions
+        public void ChangeMusicState()
+        {
+            //TODO: mute or unmute music here
+        }
+        public void ChangeSoundState()
+        {
+            //TODO: mute or unmute sounds here
+        }
+        public void Play()
+        {
+            SceneManager.LoadScene("LevelSelection");
+        }
+        public void LoadDeckSelection()
+        {
             for (int i = 0; i < 3; i++)
             {
-                string deckname = GameManager.instance.player.decks[i].name;
-                DeckManagerButtons[i].GetComponentInChildren<Text>().text = deckname;
+                string deckname = GameObject.FindObjectOfType<GameManager>().player.decks[i].name;
+                DeckSelections[i].GetComponentInChildren<Text>().text = deckname;
+
+            }
+            DeckSelection.enabled = true;
+            MainMenu.enabled = false;
+        }
+        #endregion
+        #region DeckSelectionFunctions
+
+        public void DeckSelectionBack()
+        {
+            DeckSelection.enabled = false;
+            MainMenu.enabled = true;
+        }
+        public void EditDeck(int index)
+        {
+            selectedDeck = GameObject.FindObjectOfType<GameManager>().player.decks[index];
+
+            Debug.Log("Edit Deck:"+selectedDeck.name);
+
+            DeckName.text = selectedDeck.name;
+
+            for (int i = 0; i < DeckHolder.transform.childCount; i++)
+            {
+                Destroy(DeckHolder.transform.GetChild(i).gameObject);
+            }
+            for (int i = 0; i < CardHolder.transform.childCount; i++)
+            {
+                Destroy(CardHolder.transform.GetChild(i).gameObject);
+            }
+            if (selectedDeck != null && selectedDeck.cards != null && selectedDeck.cards.Length > 0)
+            {
+                for (int i = 0; i < selectedDeck.cards.Length; i++)
+                {
+                    if (selectedDeck.cards[i] != null)
+                    {
+                        GameObject card = Instantiate(CardPrefab, DeckHolder.transform);
+                        Card cardComponent = card.GetComponent<Card>();
+                        cardComponent.setTemplate(selectedDeck.cards[i].first);
+                        card.GetComponent<Image>().sprite = cardComponent.img;
+                    }
+                }
+            }
+            GameManager gameManager = FindObjectOfType<GameManager>();
+            if (gameManager.player.cards != null && gameManager.player.cards.Count > 0)
+            {
+                for (int i = 0; i < gameManager.player.cards.Count; i++)
+                {
+                    if (gameManager.player.cards[i] != null)
+                    {
+                        GameObject card = Instantiate(CardPrefab, CardHolder.transform);
+                        Card cardComponent = card.GetComponent<Card>();
+                        cardComponent.setTemplate(gameManager.player.cards[i].first);
+                        card.GetComponent<Image>().sprite = cardComponent.img;
+                    }
+                }
+            }
+
+            DeckManager.enabled = true;
+            DeckSelection.enabled = false;
+        }
+        #endregion
+
+        #region DeckManager
+
+        public void BackToDeckManager()
+        {
+            CardShowcase.enabled = false;
+        }
+
+        public void DeckManagerBack()
+        {
+            SaveDeck();
+            for (int i = 0; i < 3; i++)
+            {
+                string deckname = GameObject.FindObjectOfType<GameManager>().player.decks[i].name;
+                DeckSelections[i].GetComponentInChildren<Text>().text = deckname;
+
+            }
+            DeckManager.enabled = false;
+            DeckSelection.enabled = true;
+        }
+
+        public void SaveDeck()
+        {
+            string source = "";
+#if UNITY_EDITOR
+            source = @"Assets/player.bin";
+#else
+            source = Application.persistentDataPath + "/player.bin";
+#endif
+
+
+            using (FileStream fs = new FileStream(source, FileMode.OpenOrCreate, FileAccess.Write))
+            {
+                BinaryFormatter bf = new BinaryFormatter();
+                bf.Serialize(fs, FindObjectOfType<GameManager>().player);
             }
         }
 
-        // Update is called once per frame
-        void Update()
+        public void EditDeckName()
         {
-            //Do Camera-Movement to active Canvas
-            Transform cameratransform = Camera.main.GetComponent<Transform>();
-            float cameraxpos = cameratransform.position.x;
-            float desiredxpos;
-            switch (state)
-            {
-                case State.MainToLevel:
-                    //Move Camera to Levelselection, departure at MainMenu
-                    break;
-                case State.MainToDeckMngr:
-                    //Move Camera To DeckManager, departure at MeinMenu
-                    desiredxpos = canvas[1].transform.position.x;
-                    if(cameraxpos < desiredxpos)
-                    {
-                        cameratransform.Translate(new Vector3((desiredxpos-cameraxpos)/5,0));
-                    }
-                    break;
-                case State.DeckMngrToMain:
-                    //Move Camera To MainMenu, departure at DeckManager
-                    desiredxpos = canvas[0].transform.position.x;
-                    if(cameraxpos > desiredxpos)
-                    {
-                        cameratransform.Translate(new Vector3((desiredxpos - cameraxpos) / 5, 0));
-                    }
-                    break;
-                case State.LevelToMain: 
-                    //Move Camera To MainMenu, departure at LevelSelection
-                    break;
-                case State.DeckMngrToDeck:
-                    //Move Camera to selected Deck, departure at DeckManager
-                    desiredxpos = canvas[2].transform.position.x;
-                    if(cameraxpos < desiredxpos) 
-                    {
-                        cameratransform.Translate(new Vector3((desiredxpos - cameraxpos) / 5, 0));
-                    }
-                    break;
-                case State.DeckToDeckMngr:
-                    //Move Camera to DeckManager, departure at selected Desk
-                    if(cameraxpos > canvas[1].transform.position.x)
-                    {
-                        cameratransform.Translate(new Vector3(-20, 0));
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-            if (selectedCardinDeck != null)
-            {
-                Vector3 position = selectedCardinDeck.GetComponent<RectTransform>().position;
-                Vector2 size = selectedCardinDeck.GetComponent<RectTransform>().sizeDelta;
-                Vector2 shadow = selectedCardinDeck.GetComponent<Shadow>().effectDistance;
-                switch (cardstate)
-                {
-                    case CardState.ZoomedIn:
-                        if(size.x < 75 && size.y < 150) 
-                        {
-                            selectedCardinDeck.GetComponent<RectTransform>().sizeDelta += new Vector2(2, 2); 
-                        }
-                        if(position.z > -20) {
-                            selectedCardinDeck.GetComponent<RectTransform>().position += new Vector3(0, 0, -4);
-                        }
-                        if(shadow.x < 5 && shadow.y > -5) 
-                        {
-                            selectedCardinDeck.GetComponent<Shadow>().effectDistance += new Vector2(1, -1);
-                        }
-                        selectedCardinDeck.GetComponent<RectTransform>().SetAsLastSibling();
-                        break;
-                    case CardState.ZommedOut:
-                        if(size.x > 65 && size.y > 140) 
-                        {
-                            selectedCardinDeck.GetComponent<RectTransform>().sizeDelta -= new Vector2(2, 2);
-                        }
-                        if(position.z < 0) 
-                        {
-                            selectedCardinDeck.GetComponent<RectTransform>().position += new Vector3(0, 0, 4);
-                        }
-                        if(shadow.x > 0 && shadow.y < 0) 
-                        {
-                            selectedCardinDeck.GetComponent<Shadow>().effectDistance += new Vector2(-1, 1);
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
+            Debug.Log(DeckName.text);
+            selectedDeck.ChangeName(DeckName.text);
         }
 
-        // void to move Sound- & Music buttons when option button is clicked
-        public void OnOptionClick()
+        public void MoveCardToDeck()
         {
-            if (!OptionBarExpanded)
+            if (selectedDeck.addCard(new Tuple<string, int>(cardInShowCase.template.cardName, cardInShowCase.template.level)) == false)
             {
-                //play expand-animation of every optionbar
-                foreach (Animator item in animator)
-                {
-                    item.Play("SettingsBarIn");
-                    OptionBarExpanded = true;
-                }
+                throw new Exception("Could not add Card to Deck");
             }
             else
             {
-                //play close-animation of every optionbar
-                foreach (Animator item in animator)
-                {
-                    item.Play("SettingsBarOut");
-                    OptionBarExpanded = false;
-                }
+                reloadDeckView();
+                CardShowcase.enabled = false;
             }
         }
-
-        public void OnMusicSoundClick()
+        public void RemoveCardFromDeck()
         {
-            //if the music button is clicked, mute or demute music
-
-            //change buttonIcon
+            if (selectedDeck.removeCard(new Tuple<string, int>(cardInShowCase.template.cardName, cardInShowCase.template.level)) == false)
+            {
+                throw new Exception("Could not remove Card from Deck");
+            }
+            else
+            {
+                reloadDeckView();
+                CardShowcase.enabled = false;
+            }
         }
 
-        public void OnSoundClick()
+        private void reloadDeckView()
         {
-            //if the sound button is clicked, mute or demute sound
-
-            //change ButtonIcon
-        }
-
-        public void OnPlayClick()
-        {
-            //GameManager.GetInstance().LoadLevelSelection();
-        }
-
-        public void OnDeckManagerClick() {
-            state = State.MainToDeckMngr;
-            //Camera.main.GetComponent<Animator>().Play("MoveToDeckManager");
-        }
-
-        public void BackToMainFromDeck() {
-            state = State.DeckMngrToMain;
-            //Camera.main.GetComponent<Animator>().Play("MoveDeckToMainMenu");
-        }
-
-        public void LoadDeck() {
-            //set Title in Header to Deckname
-            canvas[2].GetComponentInChildren<Text>().text = selectedDeck.name;
-
-            //Check every Card-Slot in Deck and check if there is any card in this slot, if so, load its image
-            for (int i = 0; i < selectedDeck.cards.Length; i++)
+            for (int i = 0; i < DeckHolder.transform.childCount; i++)
             {
-                //tag gameobjects
-                if(selectedDeck.cards[i] != null) 
-                {
-                    cardsDeckEditor[i].tag = selectedDeck.cards[i].first;
-                }
-                else
-                {
-                    cardsDeckEditor[i].tag = "Empty";
-                }
+                Destroy(DeckHolder.transform.GetChild(i).gameObject);
             }
-
-            cardstate = CardState.ZommedOut;
-
-            /*******************Bullshit********************/
-            ////Instantiate every Card in this Deck
-            //float CanvasWidth = DeckEditor_Deck.GetComponent<RectTransform>().sizeDelta.x;
-            //float CanvasHeight = DeckEditor_Deck.GetComponent<RectTransform>().sizeDelta.y;
-            //float desiredcardwidth = (CanvasWidth / 5);
-            //float desiredcardheight = (CanvasHeight / 2);
-            //float[] desiredxpos = new float[5] { -(desiredcardwidth * 2), -desiredcardwidth, 0, desiredcardwidth, desiredcardwidth*2};
-            //float[] desiredypos = new float[2] { -(desiredcardheight / 2), desiredcardheight / 2 };
-            //Vector3 desiredpos;
-
-            //for (int i = 0; i < selectedDeck.cards.Length; i++)
-            //{   
-            //    //get desired position
-            //    if(i < 5) 
-            //    {
-            //        desiredpos = new Vector3(desiredxpos[i], desiredypos[0]);
-            //    }
-            //    else
-            //    {
-            //        desiredpos = new Vector3(desiredxpos[i-5], desiredypos[1]);
-            //    }
-                
-            //    if (selectedDeck.cards[i] != null) 
-            //    {
-
-            //    }
-            //    else
-            //    {
-            //        GameObject instance = (GameObject)Instantiate(EmptyDeckslotPlaceholder, DeckEditor_Deck.GetComponent<RectTransform>());
-            //        instance.GetComponent<RectTransform>().sizeDelta = new Vector2(desiredcardwidth-10, desiredcardheight-20);
-            //        instance.GetComponent<RectTransform>().Translate(desiredpos + new Vector3(846.625f,0));
-            //        Debug.Log(instance.GetComponent<RectTransform>().position);
-            //    }
-
-            //}
-
-            state = State.DeckMngrToDeck;
-        }
-
-        public void OnCardClick(GameObject clickedcard)
-        {
-            if (clickedcard != selectedCardinDeck && selectedCardinDeck != null && cardstate == CardState.ZoomedIn)
+            if (selectedDeck != null && selectedDeck.cards != null && selectedDeck.cards.Length > 0)
             {
-                cardstate = CardState.ZommedOut;
-            }
 
-            else if (clickedcard.tag != "Empty")
-            {
-                selectedCardinDeck = clickedcard;
-                switch (cardstate)
+                for (int i = 0; i < selectedDeck.cards.Length; i++)
                 {
-                    case CardState.ZoomedIn:
-                        cardstate = CardState.ZommedOut;
-                        break;
-                    case CardState.ZommedOut:
-                        cardstate = CardState.ZoomedIn;
-                        break;
-                    default:
-                        break;
+                    if (selectedDeck.cards[i] != null)
+                    {
+                        GameObject card = Instantiate(CardPrefab, DeckHolder.transform);
+                        Card cardComponent = card.GetComponent<Card>();
+                        cardComponent.setTemplate(selectedDeck.cards[i].first);
+                        card.GetComponent<Image>().sprite = cardComponent.img;
+                    }
+
                 }
             }
         }
 
-        public void ClearDeck() {
-            selectedDeck.Clear();
-        }
-
-        public void SelectDeck(GameObject pressedButton) {
-            string Deckname = pressedButton.GetComponent<Text>().text;
-            foreach (Deck deck in GameManager.instance.player.decks)
-            {
-                if (deck.name == Deckname)
-                {
-                    selectedDeck = deck;
-                    EnableDeckEditButtons();
-                }
-            }
-
-        }
-
-        private void EnableDeckEditButtons() {
-            DeckManagerCanvasGroup.GetComponent<CanvasGroup>().alpha = 1f;
-            DeckManagerCanvasGroup.GetComponent<CanvasGroup>().interactable = true;
-        }
-
-        public void EnableDeckNameEditor() {
-            NameEditorCanvasGroup.GetComponent<CanvasGroup>().alpha = 1;
-            NameEditorCanvasGroup.GetComponent<CanvasGroup>().interactable = true;
-            NameEditorCanvasGroup.GetComponent<CanvasGroup>().blocksRaycasts = true;
-        }
-
-        private void DisableDeckNameEditor() {
-            NameEditorCanvasGroup.GetComponent<CanvasGroup>().alpha = 0;
-            NameEditorCanvasGroup.GetComponent<CanvasGroup>().interactable = false;
-            NameEditorCanvasGroup.GetComponent<CanvasGroup>().blocksRaycasts = false;
-        }
-
-
-        private void ChangeDeckName(string arg0) {
-            //change Name
-            selectedDeck.ChangeName(arg0);
-
-            //set the Canvas Groups alpha to 0 again and make it ininteractable
-            DisableDeckNameEditor();
-
-            //Reload the Deck
-            LoadDeck();
-
-            //Relaod DeckButtons so their text changes
-            LoadDeckNames();
-        }
-        public void BackToDeckManagerFromDeck() {
-            state = State.DeckToDeckMngr;
-
-        }
+        #endregion
     }
 }
