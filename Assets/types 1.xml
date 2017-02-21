@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfType xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Type>
+    <name>asd</name>
+    <strongAgainst>
+      <string>a1</string>
+      <string>a2</string>
+    </strongAgainst>
+    <weakAgainst>
+      <string>b1</string>
+      <string>b2</string>
+    </weakAgainst>
+  </Type>
+  <Type>
+    <name>asd</name>
+    <strongAgainst>
+      <string>a1</string>
+      <string>a2</string>
+    </strongAgainst>
+    <weakAgainst>
+      <string>b1</string>
+      <string>b2</string>
+    </weakAgainst>
+  </Type>
+</ArrayOfType>

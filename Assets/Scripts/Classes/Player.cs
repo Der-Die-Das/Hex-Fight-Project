@@ -10,13 +10,13 @@ namespace HexFight
     public class Player
     {
         public string name { get; private set; }
-        public List<Tuple<string, int>> cards { get; private set; }
-        public Deck[] decks { get; private set; }
+        public List<Tuple<string, int>> cards { get; /*private*/ set; }
+        public Deck[] decks { get; /*private*/ set; }
         public int level { get; set; }
         public List<Card> playedCards { get; private set; }
 
         /// <summary>
-        /// Gets called if a new Player gets createt.
+        /// Gets called if a new Player gets created.
         /// If a player gets reloaded, the instance gets createt from the FileStream
         /// </summary>
         public Player(string pName)

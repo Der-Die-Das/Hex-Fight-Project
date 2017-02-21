@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfType xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Type>
+    <name>Infantry</name>
+    <strongAgainst>
+      <string>Building</string>
+    </strongAgainst>
+    <weakAgainst>
+      <string>Cavalry</string>
+    </weakAgainst>
+  </Type>
+  <Type>
+    <name>Cavalry</name>
+    <strongAgainst>
+      <string>Infantry</string>
+    </strongAgainst>
+    <weakAgainst>
+      <string>Buildings</string>
+    </weakAgainst>
+  </Type>
+</ArrayOfType>
