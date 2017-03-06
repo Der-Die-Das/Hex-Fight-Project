@@ -69,7 +69,7 @@ namespace HexFight
                 Item2 = item2;
             }
         }
-        private Card EnemyInRange()
+        public Card EnemyInRange()
         {
             HexCoordinates pos = GetComponentInParent<HexCell>().position;
             List<Tubel<int, HexCell>> hexCells = new List<Tubel<int, HexCell>>();
